@@ -1,8 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:pdf_text/pdf_text.dart';
-
-final String url = 'https://cysec.unipi.it/wp-content/uploads/2021/02/cybersecurity_IIPeriodo.pdf';
 
 void main() {
   runApp(MyApp());
