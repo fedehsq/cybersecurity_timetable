@@ -37,33 +37,38 @@ class _TimeTableState extends State<TimeTable> {
       ),
       body: InteractiveViewer(
         minScale: 0.1,
-        maxScale: 1.6,
-        child: Column(
-          children: [
-            getRowLegend('HES = Hardware and Embedded Security', Colors.red),
-            getRowLegend('LBT = Language Based Technology', Colors.yellow),
-            getRowLegend('OSI = Organ. Science Inf. and Tech. Law', Colors.blue),
-            getRowLegend('CRY = Applied Cryptography', Colors.green),
-            getTitle(),
-            Table(
-              columnWidths: {0: FractionColumnWidth(.21)},
-              defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-              border: TableBorder.all(color: Colors.black),
+        maxScale: 2.0,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 16.0),
+            child: Column(
               children: [
-                TableRow(children: daysRow()),
-                TableRow(children: firstRow()),
-                TableRow(children: secondRow()),
-                TableRow(children: thirdRow()),
-                TableRow(children: fourthRow()),
-                TableRow(children: fifthRow()),
-                TableRow(children: sixthRow()),
-                TableRow(children: seventhRow()),
-                TableRow(children: eighthRow()),
-                TableRow(children: ninthRow()),
-                TableRow(children: tenthRow()),
+                getRowLegend('HES = Hardware and Embedded Security', Colors.red),
+                getRowLegend('LBT = Language Based Technology', Colors.yellow),
+                getRowLegend('OSI = Organ. Science Inf. and Tech. Law', Colors.blue),
+                getRowLegend('CRY = Applied Cryptography', Colors.green),
+                getTitle(),
+                Table(
+                  columnWidths: {0: FractionColumnWidth(.21)},
+                  defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                  border: TableBorder.all(color: Colors.black),
+                  children: [
+                    TableRow(children: daysRow()),
+                    TableRow(children: firstRow()),
+                    TableRow(children: secondRow()),
+                    TableRow(children: thirdRow()),
+                    TableRow(children: fourthRow()),
+                    TableRow(children: fifthRow()),
+                    TableRow(children: sixthRow()),
+                    TableRow(children: seventhRow()),
+                    TableRow(children: eighthRow()),
+                    TableRow(children: ninthRow()),
+                    TableRow(children: tenthRow()),
+                  ],
+                ),
               ],
             ),
-          ],
+          ),
         ),
       ),
       // This trailing comma makes auto-formatting nicer for build methods.
