@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 class Lesson {
+  //todo: add day?
   String nHour;
   String name;
   String start;

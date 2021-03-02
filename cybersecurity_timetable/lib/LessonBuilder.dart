@@ -3,30 +3,35 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:gson/gson.dart';
 
+// todo: controllare alla fine che le ore siano corrette => start < end e altro
 class LessonBuilder extends StatefulWidget {
-  final String nHour, start, end;
+  final String day;
 
-  const LessonBuilder({Key key, this.nHour, this.start, this.end}) : super(key: key);
+  const LessonBuilder({Key key, this.day}) : super(key: key);
 
   @override
   _LessonBuilderState createState() => _LessonBuilderState();
 }
 
 class _LessonBuilderState extends State<LessonBuilder> {
-  String _lessonStart,
-      _lessonEnd,
-      _abbreviazione = 'Abbreviazione';
+  String _abbreviazione = 'Abbreviazione';
   TextEditingController lessonController;
   TextEditingController acronimoController;
   Color _lessonColor;
+
+  final List<String> _startStringHours = <String> ["08:00"];
+  final List<String> _endStringHours = <String> ["09:00"];
+
+  final List<int> _startHours = [8];
+  final List<int> _endHours = [9];
+
 
   @override
   void initState() {
     lessonController = TextEditingController();
     acronimoController = TextEditingController();
-    _lessonStart = widget.start;
-    _lessonEnd = widget.end;
     super.initState();
   }
 
@@ -41,22 +46,20 @@ class _LessonBuilderState extends State<LessonBuilder> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          title: Text(widget.nHour)
+          title: Text(widget.day)
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // "orario" - start - end
-            buildTimeRow(context),
-            buildLessonName(),
-            buildAcronimo(),
-            Padding(
-              padding: const EdgeInsets.only(top: 32.0, bottom: 8),
-              child: Text("Seleziona un colore per la materia"),
-            ),
-            buildLessonColor()
-          ],
-        ),
+      body: ListView(
+        children: [
+          buildLessonName(),
+          buildAcronimo(),
+          Padding(
+            padding: const EdgeInsets.only(top: 32.0, bottom: 8),
+            child: Center(child: Text("Seleziona un colore per la materia")),
+          ),
+          buildLessonColor(),
+          // "orario" - start - end
+          buildTimeRows(context),
+        ],
       ),
       floatingActionButton: Visibility(
         visible: MediaQuery.of(context).viewInsets.bottom == 0.0,
@@ -67,7 +70,6 @@ class _LessonBuilderState extends State<LessonBuilder> {
     );
   }
 
-  /// builg login button
   _buildButton(String text, BuildContext context) {
     return FlatButton(
         color: Colors.blue,
@@ -77,66 +79,113 @@ class _LessonBuilderState extends State<LessonBuilder> {
             // Find the Scaffold in the widget tree and use it to show a SnackBar.
             Scaffold.of(context).showSnackBar(snackBar);
           } else {
-            Lesson lesson = Lesson(widget.nHour, lessonController.text, _lessonStart, _lessonEnd,
+            Gson gson = Gson();
+            Lesson lesson = Lesson(widget.day, lessonController.text,
+                gson.encoder.encode(_startStringHours),
+                gson.encoder.encode(_endStringHours),
                 _abbreviazione, _lessonColor);
             // The Yep button returns "Yep!" as the result.
             Navigator.pop(context, lesson);
           }
         },
-        child: Text(text, style: TextStyle(color: Colors.white),),
+        child: Text(text, style: TextStyle(color: Colors.white)),
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8.0)
         )
     );
   }
 
-  Row buildTimeRow(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        // show "orario"
-        Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Text("Inizio:", style: TextStyle(fontSize: 16),),
-        ),
-        InkWell(
-          onTap: () =>
-          {
-            timePicker(context, "Inizio " + widget.nHour.toLowerCase())
-          },
-          child: Text(_lessonStart, style: TextStyle(fontSize: 24)),
-        ),
+   buildTimeRows(BuildContext context) {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: ScrollPhysics(),
+      itemCount: _startStringHours.length + 1,
+      itemBuilder: (BuildContext context, int index) {
+         return index == _startStringHours.length ?
+         ListTile(
+           leading: Icon(Icons.add),
+           title: Text("Voce elenco"),
+           onTap: () {
+             addHour(context, _endHours[index - 1] + 1);
+           },
+         ) :
+         Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // show "orario"
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Text("Inizio:", style: TextStyle(fontSize: 16),),
+            ),
+            InkWell(
+              onTap: () =>
+              {
+                modifyHour(context, "Inizio", _startHours[index], index)
+              },
+              child: Text(_startStringHours[index], style: TextStyle(fontSize: 24)),
+            ),
 
-        Spacer(),
+            Spacer(),
 
-        Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Text("Fine:", style: TextStyle(fontSize: 16),),
-        ),
-        InkWell(
-          onTap: () =>
-          {
-            timePicker(context, "Fine " + widget.nHour.toLowerCase())
-          },
-          child: Text(_lessonEnd, style: TextStyle(fontSize: 24)),
-        ),
-        Spacer(),
-      ],
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Text("Fine:", style: TextStyle(fontSize: 16),),
+            ),
+            InkWell(
+              onTap: () =>
+              {
+                modifyHour(context, "Fine", _endHours[index], index)
+              },
+              child: Text(_endStringHours[index], style: TextStyle(fontSize: 24)),
+            ),
+            Spacer(),
+          ],
+        );
+      },
     );
   }
 
-
-  timePicker(BuildContext context, String message) async {
+  modifyHour(BuildContext context, String message, int hour, int i) async {
     final TimeOfDay newTime = await showTimePicker(
       helpText: message,
       context: context,
-      initialTime: TimeOfDay(hour: 08, minute: 00),
+      initialTime: TimeOfDay(hour: hour, minute: 00),
     );
-    setState(() {
-      message.startsWith("Inizio") ?
-      _lessonStart = newTime.format(context) : _lessonEnd =
-          newTime.format(context);
-    });
+    if (newTime != null) {
+      setState(() {
+        if (message == 'Inizio') {
+          _startStringHours.removeAt(i);
+          _startStringHours.insert(i, newTime.format(context));
+
+          _startHours.removeAt(i);
+          _startHours.insert(i, newTime.hour);
+        } else {
+          _endStringHours.removeAt(i);
+          _endStringHours.insert(i, newTime.format(context));
+
+          _endHours.removeAt(i);
+          _endHours.insert(i, newTime.hour);
+        }
+      });
+    }
+  }
+
+  addHour(BuildContext context, int hour) async {
+    final TimeOfDay newTime = await showTimePicker(
+      helpText: "Inizio",
+      context: context,
+      initialTime: TimeOfDay(hour: hour, minute: 00),
+    );
+    if (newTime != null) {
+      setState(() {
+        _startStringHours.add(newTime.format(context));
+        _endStringHours.add(
+            newTime.replacing(hour: newTime.hour + 1).format(context));
+
+        _startHours.add(newTime.hour);
+        _endHours.add(newTime.hour + 1);
+      });
+    }
   }
 
   buildLessonName() {
@@ -191,6 +240,7 @@ class _LessonBuilderState extends State<LessonBuilder> {
       Container(height: 32, width: 32, color: Colors.brown),
     ];
     return GridView.builder(
+      physics: ScrollPhysics(),
         shrinkWrap: true,
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisSpacing: 5,
@@ -215,4 +265,60 @@ class _LessonBuilderState extends State<LessonBuilder> {
         }
     );
   }
+
+  void startAndEndHour() async {
+    final TimeOfDay start = await showTimePicker(
+      helpText: "Inizio",
+      context: context,
+      initialTime: TimeOfDay(hour: 08, minute: 00),
+    );
+    int startH = start.hour;
+    final TimeOfDay end = await showTimePicker(
+      helpText: "Fine",
+      context: context,
+      initialTime: TimeOfDay(hour: startH + 1, minute: 00),
+    );
+    // check if hours are already chosen
+    String s = start.format(context);
+    String e = end.format(context);
+    if (_startStringHours.contains(s)) {
+      await _showMyDialog(s, 'inizio');
+    } else if (_endStringHours.contains(e)) {
+      await _showMyDialog(e, 'fine');
+    } else {
+      setState(() {
+        _startStringHours.add(s);
+        _endStringHours.add(e);
+      });
+    }
+  }
+
+  Future<void> _showMyDialog(String hour, String how) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Attenzione'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('Hai già inserito $hour come ora di $how.'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Ho capito'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
 }

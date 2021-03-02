@@ -1,3 +1,4 @@
+import 'package:cybersecurity_timetable/DaysBuilder.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -19,7 +20,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: HoursBuilder()
+      home: DaysBuilder()
     );
   }
 }

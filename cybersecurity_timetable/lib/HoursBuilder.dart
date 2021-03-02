@@ -3,11 +3,18 @@ import 'package:cybersecurity_timetable/LessonModifer.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:gson/gson.dart';
 
 import 'Database.dart';
 import 'LessonBuilder.dart';
 
+// todo: controllare prima di tornare indietro che gli orari non si accavallino
+
 class HoursBuilder extends StatefulWidget {
+  final String day;
+
+  const HoursBuilder({Key key, this.day}) : super(key: key);
+
   @override
   _HoursBuilderState createState() => _HoursBuilderState();
 }
@@ -16,45 +23,27 @@ class _HoursBuilderState extends State<HoursBuilder> {
 
   final MyDatabase database = MyDatabase();
 
-  final List<String> startHours = <String> [
-    "08:00", "09:00", "10:00", "11:00", "12:00",
-    "13:00", "14:00", "15:00", "16:00", "17:00", "18:00",
-  ];
-
-  final List<String> endHours = <String> [
-    "09:00", "10:00", "11:00", "12:00", "13:00",
-    "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"
-  ];
-
-
-  final List<String> nHours = <String> [
-    "Prima ora", "Seconda ora", "Terza ora", "Quarta ora", "Quinta ora",
-    "Sesta ora", "Settima ora", "Ottava ora", "Nona ora", "Decima ora",
-    "Undicsesima ora"
-  ];
-
   // this screen hours
   final List<Lesson> lessons = <Lesson>[];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(title: Text("Costruisci l'orario")
+        appBar: AppBar(title: Text("Orario di ${widget.day}")
         ),
         body: Stack(
           children: [
             Opacity(
               opacity: 0.2,
               child: SvgPicture.asset(
-                'images/teaching.svg',),
+                'images/teaching.svg'),
             ),
             ListView.builder(
               itemCount: lessons.length + 1,
               itemBuilder: (context, index) {
                 return index == lessons.length ?
                 ListTile(
-                  onTap: () => waitForHour(context, nHours[index],
-                      startHours[index], endHours[index]),
+                  onTap: () => waitForHour(context, widget.day),
                   leading: Icon(Icons.add),
                   title: Text("Voce elenco")
                 ) :
@@ -69,7 +58,7 @@ class _HoursBuilderState extends State<HoursBuilder> {
                   ),
                   leading: Icon(Icons.access_time_outlined),
                   title: Text(lessons[index].name),
-                  subtitle: Text(lessons[index].start + " - " + lessons[index].end),
+                  subtitle: Text(hoursFormat(lessons[index])),
                 );
 
                // hours[index];
@@ -88,14 +77,27 @@ class _HoursBuilderState extends State<HoursBuilder> {
     );
   }
 
-  waitForHour(BuildContext context, String hour, String start, String end) async {
+  hoursFormat(Lesson lesson) {
+    Gson gson = Gson();
+    var starts = gson.decode(lesson.start);
+    var ends = gson.decode(lesson.end);
+    String formatted = '';
+    for (int i = 0; i < starts.length; i++) {
+      i % 2 == 0 ?
+      formatted += starts[i] + " - " + ends[i] + "     " :
+      formatted += starts[i] + " - " + ends[i] + " \n";
+    }
+    return formatted;
+  }
+
+  waitForHour(BuildContext context, String day) async {
     // Navigator.push returns a Future that completes after calling
     // Navigator.pop on the Selection Screen.
     Lesson lesson = await Navigator.push(
       context,
       // Create the SelectionScreen in the next step.
       MaterialPageRoute(builder: (context) =>
-          LessonBuilder(nHour: hour, start: start, end: end)),
+          LessonBuilder(day: day)),
     );
     if (lesson != null) {
       setState(() {
